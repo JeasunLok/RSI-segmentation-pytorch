@@ -1,84 +1,81 @@
 import os
 import random
-
+import cv2
 import numpy as np
 from tqdm import tqdm
 from utils.tif_file_processing import *
 
-#-------------------------------------------------------#
-#   想要增加测试集修改trainval_percent 
-#   修改train_percent用于改变验证集的比例 9:1
-#   
-#   当前该库将测试集当作验证集使用，不单独划分测试集
-#-------------------------------------------------------#
-trainval_percent    = 0.8
-train_percent       = 0.8
-#-------------------------------------------------------#
-#   指向VOC数据集所在的文件夹
-#   默认指向根目录下的VOC数据集
-#-------------------------------------------------------#
+train_percent = 0.8
+val_percent = 0.1
+test_percent = 0.1
+
 data_path = 'data'
 
 if __name__ == "__main__":
     random.seed(0)
-    print("Generate txt in ImageSets.")
-    segfilepath     = os.path.join(data_path, 'labels')
-    saveBasePath    = os.path.join(data_path, 'list')
+    print("Generate txt for trainning, validating and testing in data folder.")
+    segfilepath = os.path.join(data_path, "labels")
+    saveBasePath = os.path.join(data_path, "list")
     
     temp_seg = os.listdir(segfilepath)
     total_seg = []
     for seg in temp_seg:
-        if seg.endswith(".tif"):
+        if seg.endswith(".tif") or seg.endswith(".png"):
             total_seg.append(seg)
 
-    num     = len(total_seg)  
-    list    = range(num)  
-    tv      = int(num*trainval_percent)  
-    tr      = int(tv*train_percent)  
-    trainval= random.sample(list,tv)  
-    train   = random.sample(trainval,tr)  
+    num = len(total_seg)   
+    train_num = int(num*train_percent)  
+    val_num = int(num*val_percent)
+    test_num = int(num*test_percent)
+
+    print("Train size: {:d} | Val size: {:d} | Test size: {:d}".format(train_num, val_num, test_num))
+
+    # shuffle the list
+    random.shuffle(total_seg)
+
+    train_list = total_seg[0:int(num*train_percent)]
+    val_list = total_seg[int(num*train_percent):int(num*(train_percent+val_percent))]
+    test_list = total_seg[int(num*(train_percent+val_percent)):int(num*(train_percent+val_percent+test_percent))]
+
+    # create the list file for trainning, validating and testing in data folder
+    ftrain      = open(os.path.join(saveBasePath, 'train.txt'), 'w') 
+    ftest       = open(os.path.join(saveBasePath, 'test.txt'), 'w')  
+    fval        = open(os.path.join(saveBasePath, 'val.txt'), 'w')  
     
-    print("train and val size",tv)
-    print("traub suze",tr)
-    ftrainval   = open(os.path.join(saveBasePath,'trainval.txt'), 'w')  
-    ftest       = open(os.path.join(saveBasePath,'test.txt'), 'w')  
-    ftrain      = open(os.path.join(saveBasePath,'train.txt'), 'w')  
-    fval        = open(os.path.join(saveBasePath,'val.txt'), 'w')  
-    
-    for i in list:  
-        name = total_seg[i][:-4]+'\n'  
-        if i in trainval:  
-            ftrainval.write(name)  
-            if i in train:  
-                ftrain.write(name)  
-            else:  
-                fval.write(name)  
-        else:  
-            ftest.write(name)  
-    
-    ftrainval.close()  
+    for i in train_list:  
+        # linux should add replace("\\", "\\\\")
+        ftrain.write(os.path.join(segfilepath, i).replace("\\", "\\\\") + '\n')
+    for i in val_list:  
+        # linux should add replace("\\", "\\\\")
+        fval.write(os.path.join(segfilepath, i).replace("\\", "\\\\") + '\n')
+    for i in test_list:  
+        # linux should add replace("\\", "\\\\")
+        ftest.write(os.path.join(segfilepath, i).replace("\\", "\\\\") + '\n')
+
     ftrain.close()  
     fval.close()  
     ftest.close()
-    print("Generate txt in ImageSets done.")
+    print("Create list successfully")
 
     print("Check datasets format, this may take a while.")
-    print("检查数据集格式是否符合要求，这可能需要一段时间。")
     classes_nums = np.zeros([256], np.int64)
-    for i in tqdm(list):
-        name            = total_seg[i]
-        label_name   = os.path.join(segfilepath, name)
+    for i in tqdm(range(num)):
+        name = total_seg[i]
+        label_name = os.path.join(segfilepath, name)
         if not os.path.exists(label_name):
-            raise ValueError("未检测到标签图片%s,请查看具体路径下文件是否存在以及后缀是否为tif"%label_name)
+            raise ValueError("There is no label %s, please check whether the file exists or its format (tif or png) is right."%label_name)
         
-        label, im_Geotrans, im_proj, cols, rows = read_tif(label_name)
-        label = np.squeeze(label, 2)
+        if label_name.endswith(".tif"):
+            label, im_Geotrans, im_proj, cols, rows = read_tif(label_name)
+            label = np.squeeze(label, 2)
+        elif label_name.endswith(".png"):
+            label = cv2.imread(label_name, cv2.IMREAD_GRAYSCALE)
+
         if len(np.shape(label)) > 2:
-            print("标签图片%s的shape为%s,请仔细检查数据集格式"%(name, str(np.shape(label))))
-            print("标签的每个像素点的值就是这个像素点所属的种类")
+            print("The shape of %s is %s, please checkout the dataset format."%(name, str(np.shape(label))))
         classes_nums += np.bincount(np.reshape(label, [-1]), minlength=256)
             
-    print("打印像素点的值与数量。")
+    print("Print the pixels Key and Value.")
     print('-' * 37)
     print("| %15s | %15s |"%("Key", "Value"))
     print('-' * 37)
@@ -88,7 +85,7 @@ if __name__ == "__main__":
             print('-' * 37)
     
     if classes_nums[255] > 0 and classes_nums[0] > 0 and np.sum(classes_nums[1:255]) == 0:
-        print("检测到标签中像素点的值仅包含0与255,数据格式有误。")
-        print("二分类问题需要将标签修改为背景的像素点值为0,目标的像素点值为1。")
+        print("Label only includes 0 and 255, 。")
+        print("Binary classification should only include 0 for background, 1 for target.")
     elif classes_nums[0] > 0 and np.sum(classes_nums[1:]) == 0:
-        print("检测到标签中仅仅包含背景像素点，数据格式有误，请仔细检查数据集格式。")
+        print("Only background in the label, please checkout the dataset format.")
