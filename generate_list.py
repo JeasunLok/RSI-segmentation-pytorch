@@ -45,17 +45,20 @@ if __name__ == "__main__":
     for i in train_list:  
         # linux should add replace("\\", "\\\\")
         ftrain.write(os.path.join(segfilepath, i).replace("\\", "\\\\") + '\n')
+        # ftrain.write(os.path.join(segfilepath, i) + '\n')
     for i in val_list:  
         # linux should add replace("\\", "\\\\")
         fval.write(os.path.join(segfilepath, i).replace("\\", "\\\\") + '\n')
+        # fval.write(os.path.join(segfilepath, i) + '\n')
     for i in test_list:  
         # linux should add replace("\\", "\\\\")
         ftest.write(os.path.join(segfilepath, i).replace("\\", "\\\\") + '\n')
+        # ftest.write(os.path.join(segfilepath, i) + '\n')
 
     ftrain.close()  
     fval.close()  
     ftest.close()
-    print("Create list successfully")
+    print("Create list successfully.")
 
     print("Check datasets format, this may take a while.")
     classes_nums = np.zeros([256], np.int64)
@@ -85,7 +88,7 @@ if __name__ == "__main__":
             print('-' * 37)
     
     if classes_nums[255] > 0 and classes_nums[0] > 0 and np.sum(classes_nums[1:255]) == 0:
-        print("Label only includes 0 and 255, 。")
+        print("Label only includes 0 and 255.")
         print("Binary classification should only include 0 for background, 1 for target.")
     elif classes_nums[0] > 0 and np.sum(classes_nums[1:]) == 0:
         print("Only background in the label, please checkout the dataset format.")
