@@ -1,5 +1,6 @@
 import numpy as np
 from osgeo import gdal
+
 # 读取tif
 def read_tif(path):
     dataset = gdal.Open(path)
