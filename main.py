@@ -5,12 +5,12 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.optim as optim
+
 from torch.utils.data import DataLoader
 from utils.utils import *
-from utils.training_settings import *
 from utils.dataloader import *
-
-from model.PSPNet import *
+from model.UNet import *
+from train import *
 
 if __name__ == "__main__":
     # 是否使用GPU
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     sync_bn = False
     fp16 = False
 
-    num_classes = 2
+    num_classes = 11
 
     pretrained = False
     model_path = r""
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         local_rank = 0
 
-    model = PSPNet(num_classes=2)
+    model = UNet(num_classes=num_classes).to(device)
 
     if model_path != '':
         if local_rank == 0:
@@ -106,14 +106,16 @@ if __name__ == "__main__":
 
     # 优化器
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(momentum, 0.999), weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=epoch//10, gamma=0.9) 
+    criterion = nn.CrossEntropyLoss(ignore_index=0).cuda()
 
     image_transform = get_transform(input_shape, IsTotensor=True, IsNormalize=True)
     label_transform = get_transform(input_shape, IsTotensor=True, IsNormalize=False)
     # image_transform = None
     # label_transform = None
-    train_dataset = MyDataset(train_lines, input_shape, num_classes, image_transform=image_transform, label_transform=label_transform)
-    val_dataset = MyDataset(val_lines, input_shape, num_classes, image_transform=image_transform, label_transform=label_transform)
-    test_dataset = MyDataset(test_lines, input_shape, num_classes, image_transform=image_transform, label_transform=label_transform)
+    train_dataset = MyDataset(train_lines, input_shape, num_classes, image_transform=image_transform, label_transform=None)
+    val_dataset = MyDataset(val_lines, input_shape, num_classes, image_transform=image_transform, label_transform=None)
+    test_dataset = MyDataset(test_lines, input_shape, num_classes, image_transform=image_transform, label_transform=None)
 
     if distributed:
         train_sampler   = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True,)
@@ -131,18 +133,19 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, shuffle=shuffle, batch_size=batch_size, num_workers=num_workers, pin_memory=True, drop_last=True, sampler=val_sampler)
     test_loader = DataLoader(test_dataset, shuffle=shuffle, batch_size=batch_size, num_workers=num_workers, pin_memory=True, drop_last=True, sampler=test_sampler)
 
-    # # 开始模型训练
-    # for e in range(epoch):
+    # 开始模型训练
+    for e in range(epoch):
+        train_acc1, train_mIoU, train_loss = train_epoch(model_train, train_loader, criterion, optimizer, e, epoch, device, num_classes)
+        scheduler.step()
+        # train()
+        # val()
+        # test()
 
-    #     # train()
-    #     # val()
-    #     # test()
 
+        # if distributed:
+        #     train_sampler.set_epoch(epoch)
 
-    #     if distributed:
-    #         train_sampler.set_epoch(epoch)
-
-    #     if distributed:
-    #         dist.barrier()
+        # if distributed:
+        #     dist.barrier()
 
     
