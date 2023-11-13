@@ -38,9 +38,9 @@ if __name__ == "__main__":
     test_list = total_seg[int(num*(train_percent+val_percent)):int(num*(train_percent+val_percent+test_percent))]
 
     # create the list file for trainning, validating and testing in data folder
-    ftrain      = open(os.path.join(saveBasePath, 'train.txt'), 'w') 
-    ftest       = open(os.path.join(saveBasePath, 'test.txt'), 'w')  
-    fval        = open(os.path.join(saveBasePath, 'val.txt'), 'w')  
+    ftrain = open(os.path.join(saveBasePath, 'train.txt'), 'w') 
+    ftest = open(os.path.join(saveBasePath, 'test.txt'), 'w')  
+    fval = open(os.path.join(saveBasePath, 'val.txt'), 'w')  
     
     for i in train_list:  
         # linux should add replace("\\", "\\\\")
