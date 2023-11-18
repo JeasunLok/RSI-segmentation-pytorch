@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from utils.utils import *
 from utils.dataloader import *
 from model.UNet import *
+from model.SegNext_SegModel import *
 from train import *
 from test import *
 
@@ -71,7 +72,8 @@ if __name__ == "__main__":
         device = torch.device("cpu")
         local_rank = 0
 
-    model = UNet(num_classes=num_classes).to(device)
+    # model = UNet(num_classes=num_classes).to(device)
+    model = SegNext_SegModel(out_channels=num_classes).to(device)
 
     if model_path != '':
         if local_rank == 0:

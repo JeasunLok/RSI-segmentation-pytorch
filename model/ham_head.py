@@ -240,6 +240,7 @@ class LightHamHead(BaseDecodeHead):
         self.ham_channels = ham_channels
         self.least_downsample_factor = least_downsample_factor
         self.out_channels = out_channels
+        self.conv_seg = nn.Conv2d(self.ham_channels, self.out_channels, kernel_size=1)
 
         self.squeeze = ConvModule(
             sum(self.in_channels),
@@ -259,6 +260,13 @@ class LightHamHead(BaseDecodeHead):
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
 
+    def cls_seg(self, feat):
+        """Classify each pixel."""
+        if self.dropout is not None:
+            feat = self.dropout(feat)
+        output = self.conv_seg(feat)
+        return output
+    
     def forward(self, inputs):
         """Forward function."""
         inputs = self._transform_inputs(inputs)

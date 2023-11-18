@@ -72,7 +72,7 @@ class SegNext_SegModel(nn.Module):
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = "cpu"
-    model = SegNext_SegModel().to(device)
+    model = SegNext_SegModel(out_channels=3).to(device)
     input = torch.randn([2,3,512,512]).to(device)
     output = model(input)
     print("="*100)
