@@ -232,13 +232,14 @@ class LightHamHead(BaseDecodeHead):
         ham_kwargs (int): kwagrs for Ham. Defaults: dict().
     """
 
-    def __init__(self, least_downsample_factor=8, in_channels=[128, 320, 512], in_index=[1, 2, 3], ham_channels=1024, ham_kwargs=dict(), **kwargs):
+    def __init__(self, least_downsample_factor=8, in_channels=[128, 320, 512], out_channels=11, in_index=[1, 2, 3], ham_channels=1024, ham_kwargs=dict(), **kwargs):
         super(LightHamHead, self).__init__(
             input_transform='multiple_select', **kwargs)
         self.in_channels = in_channels
         self.in_index = in_index
         self.ham_channels = ham_channels
         self.least_downsample_factor = least_downsample_factor
+        self.out_channels = out_channels
 
         self.squeeze = ConvModule(
             sum(self.in_channels),

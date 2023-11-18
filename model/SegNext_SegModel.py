@@ -9,6 +9,7 @@ from ham_head import LightHamHead
 class SegNext_SegModel(nn.Module):
     def __init__(self,
                 input_channels=3,
+                out_channels=11,
                 embed_dims=[64, 128, 320, 512],
                 mlp_ratios=[4, 4, 4, 4],
                 drop_rate=0.,
@@ -47,7 +48,8 @@ class SegNext_SegModel(nn.Module):
 
         # decoder
         self.decoder = LightHamHead(least_downsample_factor, 
-                in_channels, 
+                in_channels,
+                out_channels, 
                 in_index, 
                 ham_channels, 
                 ham_kwargs)
