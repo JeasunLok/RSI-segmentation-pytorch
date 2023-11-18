@@ -98,7 +98,7 @@ if __name__ == "__main__":
             model_train = model_train.cuda(local_rank)
             model_train = torch.nn.parallel.DistributedDataParallel(model_train, device_ids=[local_rank], find_unused_parameters=True)
         else:
-            model_train = torch.nn.DataParallel(model)
+            model_train = torch.nn.DataParallel(model_train)
             cudnn.benchmark = True
             model_train = model_train.cuda()
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     print("===============================================================================")
 
     # 优化器
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(momentum, 0.999), weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model_train.parameters(), lr=lr, betas=(momentum, 0.999), weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epoch//10, eta_min=min_lr) 
     criterion = nn.CrossEntropyLoss(ignore_index=0).cuda()
 
@@ -167,8 +167,8 @@ if __name__ == "__main__":
             val_weighted_recall, val_weighted_precision, val_weighted_f1 = compute_metrics(val_CM)
             if (e != epoch -1):
                 print("Epoch: {:03d}  =>  Accuracy: {:.2f}% | MIoU: {:.2f}% | W-Recall: {:.4f} | W-Precision: {:.4f} | W-F1: {:.4f}".format(e+1, val_acc*100, val_mIoU*100, val_weighted_recall, val_weighted_precision, val_weighted_f1))
-            torch.save(model, os.path.join(checkpoints_folder, "model_loss" + str(round(val_loss, 4)) + "_epoch" + str(e+1) + ".pth"))
-            torch.save(model.state_dict(), os.path.join(checkpoints_folder, "model_state_dict_loss" + str(round(val_loss, 4)) + "_epoch" + str(e+1) + ".pth"))
+            torch.save(model_train, os.path.join(checkpoints_folder, "model_loss" + str(round(val_loss, 4)) + "_epoch" + str(e+1) + ".pth"))
+            torch.save(model_train.state_dict(), os.path.join(checkpoints_folder, "model_state_dict_loss" + str(round(val_loss, 4)) + "_epoch" + str(e+1) + ".pth"))
             print("===============================================================================")
     
     if distributed:
