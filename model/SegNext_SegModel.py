@@ -3,8 +3,8 @@ from mmcv.cnn import ConvModule, xavier_init
 import torch.nn as nn
 import torch.nn.functional as F
 from thop import profile
-from mscan import MSCAN
-from ham_head import LightHamHead
+from model.mscan import MSCAN
+from model.ham_head import LightHamHead
 
 class SegNext_SegModel(nn.Module):
     def __init__(self,

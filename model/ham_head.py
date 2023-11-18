@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import warnings
 from mmcv.cnn import ConvModule
 from thop import profile
-from base_decode_head import *
+from model.base_decode_head import *
 
 def resize(input,
            size=None,

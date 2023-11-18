@@ -33,10 +33,10 @@ class MyDataset(Dataset):
         else:
             image = torch.from_numpy(np.transpose(np.array(image), [2, 0 ,1]))
         if self.label_transform is not None:
-            label = self.label_transform(label)
+            label = self.label_transform(label)*255
             label = torch.squeeze(label, 0)
         else:
-            label= torch.from_numpy(np.array(label))
+            label= torch.from_numpy(np.array(label))*255
         return image, label
 
     def __len__(self):
