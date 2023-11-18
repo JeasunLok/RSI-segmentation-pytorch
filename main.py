@@ -125,13 +125,13 @@ if __name__ == "__main__":
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epoch//10, eta_min=min_lr) 
     criterion = nn.CrossEntropyLoss(ignore_index=0).cuda()
 
-    image_transform = get_transform(input_shape, IsTotensor=True, IsNormalize=True)
-    label_transform = get_transform(input_shape, IsTotensor=True, IsNormalize=False)
+    image_transform = get_transform(input_shape, IsResize=True, IsTotensor=True, IsNormalize=True)
+    label_transform = get_transform(input_shape, IsResize=True, IsTotensor=True, IsNormalize=False)
     # image_transform = None
     # label_transform = None
-    train_dataset = MyDataset(train_lines, input_shape, num_classes, image_transform=image_transform, label_transform=None)
-    val_dataset = MyDataset(val_lines, input_shape, num_classes, image_transform=image_transform, label_transform=None)
-    test_dataset = MyDataset(test_lines, input_shape, num_classes, image_transform=image_transform, label_transform=None)
+    train_dataset = MyDataset(train_lines, input_shape, num_classes, image_transform=image_transform, label_transform=label_transform)
+    val_dataset = MyDataset(val_lines, input_shape, num_classes, image_transform=image_transform, label_transform=label_transform)
+    test_dataset = MyDataset(test_lines, input_shape, num_classes, image_transform=image_transform, label_transform=label_transform)
 
     if distributed:
         train_sampler   = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True,)
